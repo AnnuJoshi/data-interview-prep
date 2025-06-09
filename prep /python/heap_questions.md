@@ -73,7 +73,37 @@
   <summary>2. Find Median from Data Stream </summary>
   
   ```python 
+  class MedianOfStream:
 
+    def __init__(self):
+        self.max_heap_for_smallnum = [] # remember small nums in max heap, name accordingly 
+        self.min_heap_for_largenum = []
+
+    def insert_num(self, num):
+        # first insert to small nums heap if it empty 
+        # if incoming num is less than max of small nums then it will come small num heap 
+        if not self.max_heap_for_smallnum or -self.max_heap_for_smallnum[0] >= num: # rem to insert negative values
+            heappush(self.max_heap_for_smallnum, -num)
+        else:
+            heappush(self.min_heap_for_largenum, num)
+        
+        # balancing 
+        # if maxheap (smaller numbers) has more than one element more than the min heap (larger numbers)
+        if len(self.max_heap_for_smallnum) > len(self.min_heap_for_largenum) + 1:
+            heappush(self.min_heap_for_largenum, -heappop(self.max_heap_for_smallnum))
+        # if maxheap (smaller numbers) is less than minheap (larger values)
+        elif len(self.max_heap_for_smallnum) < len(self.min_heap_for_largenum):
+            heappush(self.max_heap_for_smallnum, -heappop(self.min_heap_for_largenum))
+
+    def find_median(self):
+        if len(self.max_heap_for_smallnum) == len(self.min_heap_for_largenum):
+
+            # even number case, take the average of middle two elements
+            # we divide both numbers by 2.0 to ensure we add two floating point numbers
+            return -self.max_heap_for_smallnum[0] / 2.0 + self.min_heap_for_largenum[0] / 2.0
+
+        # odd number case- max-heap will have one more element than the min-heap
+        return -self.max_heap_for_smallnum[0] / 1.0
     
   ```
   </details>
