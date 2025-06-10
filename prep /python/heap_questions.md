@@ -107,3 +107,95 @@
     
   ```
   </details>
+
+<details> 
+  <summary>3. Sliding Window Median </summary>
+  Trick: Top element of heap is removed in log n time, however if the element is not at top it does not impact the median value.
+
+  Instead, we use a delayed deletion approach with the `to_remove` dictionary.
+
+  ```python 
+  from heapq import heappop, heappush, heapify
+
+
+def median_sliding_window(nums, k):
+    # result 
+    medians = []
+    # lazy deletion 
+    outgoing_num = {}
+    #heaps 
+    small_list = []
+    large_list = []
+    
+    # create two heaps based on k and k//2
+    for i in range(0, k):
+        heappush(small_list, -1 * nums[i])
+
+    for i in range(0, k//2): # floor division operator
+        element = heappop(small_list)
+        heappush(large_list, -1 * element)
+
+    balance = 0
+    # Tracking the balance between the two heaps using a balance variable.
+    # A positive balance means small_list has more elements than it should relative to large_list,
+    # and a negative balance means large_list has more.
+    i = k
+    while True:
+        # median calculation for even and odd value of k 
+        if (k & 1) == 1:  #odd
+            medians.append(float(small_list[0] * -1))
+        else: # even 
+            medians.append((float(small_list[0] * -1) + float(large_list[0])) * 0.5)
+        
+        # breaking condition 
+        if i >= len(nums):
+            break
+        
+        # num going of window
+        out_num = nums[i - k]
+        # new number in window
+        in_num = nums[i]
+        i += 1
+        
+        # If an outgoing number is from the smaller half, it decreases the balance; 
+        # if from the larger half, it increases it.
+        if out_num <= (small_list[0] * -1):
+            balance -= 1  #removing from small list 
+        else:
+            balance += 1 #removing from large list 
+        
+        # adding for deletion in dict 
+        if out_num in outgoing_num:
+            outgoing_num[out_num] = outgoing_num[out_num] + 1
+        else:
+            outgoing_num[out_num] = 1
+
+        if small_list and in_num <= (small_list[0] * -1):
+            balance += 1 # adding to small list 
+            heappush(small_list, in_num * -1)
+        else:
+            balance -= 1 # adding to large list 
+            heappush(large_list, in_num)
+
+        if balance < 0:
+            heappush(small_list, (-1 * large_list[0]))
+            heappop(large_list)
+        elif balance > 0:
+            heappush(large_list, (-1 * small_list[0]))
+            heappop(small_list)
+
+        balance = 0
+        
+        # removing out of window elements from heap tops
+        while (small_list[0] * -1) in outgoing_num and (outgoing_num[(small_list[0] * -1)] > 0):
+            outgoing_num[small_list[0] * -1] = outgoing_num[small_list[0] * -1] - 1
+            heappop(small_list)
+        # removing out of window elements from heap tops
+        while large_list and large_list[0] in outgoing_num and (outgoing_num[large_list[0]] > 0):
+            outgoing_num[large_list[0]] = outgoing_num[large_list[0]] - 1
+            heappop(large_list)
+
+    return medians
+
+  ```
+ </details>
