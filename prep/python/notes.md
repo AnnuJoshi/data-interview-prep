@@ -1,0 +1,1 @@
+- The `datetime.fromisoformat()` method in Python returns a datetime object. This object represents a specific date and time, parsed from an ISO 8601 formatted string.  
