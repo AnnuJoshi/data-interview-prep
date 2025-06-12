@@ -177,4 +177,141 @@ HAVING COUNT(*) >= 3
    AND MAX(placed_at) <= CURRENT_DATE - INTERVAL '60 days'
 ORDER BY days_since_last_order DESC;
 ```
+</details>
 
+<details>
+<summary> Day 2 Practice </summary>
+
+####  [App Click-through Rate (CTR)](https://datalemur.com/questions/click-through-rate) (6 min)
+
+```sql
+-- issue with DATE_TRUNC, its for truncation not part
+-- ended up using > <  logic 
+-- round bracket 
+-- could have used DATE_PART('year', timestamp::DATE) = 2022
+SELECT
+  app_id,
+  ROUND(100.0 *
+    SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) /
+    SUM(CASE WHEN event_type = 'impression' THEN 1 ELSE 0 END), 2)  AS ctr_rate
+FROM events
+WHERE timestamp >= '2022-01-01' 
+  AND timestamp < '2023-01-01'
+GROUP BY app_id;
+
+```
+
+#### [SQL Question 1: First 14-Day Satisfaction](https://datalemur.com/blog/doordash-sql-interview-questions)(9 min)
+Ordered within 14 days of signup and signup in June22, what is their order cancellation rate ?
+```sql
+WITH june22_users AS (
+    SELECT customer_id, signup_timestamp
+    FROM customers
+    WHERE signup_timestamp >= '2022-06-01'
+      AND signup_timestamp <  '2022-07-01'
+),
+orders_14d AS (
+    SELECT o.*,
+           CASE
+               WHEN status IN ('completed incorrectly', 'never received')
+                 OR actual_delivery_timestamp > order_timestamp + INTERVAL '30 minutes' -- missed this constraint
+               THEN 1 ELSE 0
+           END AS is_bad
+    FROM orders o
+    JOIN june22_users ju -- inner join works no need for left
+      ON o.customer_id = ju.customer_id
+     AND o.order_timestamp >= ju.signup_timestamp -- explicit condition 
+     AND o.order_timestamp <  ju.signup_timestamp + INTERVAL '14 days' -- less than 
+)
+SELECT
+    ROUND(100.0 * SUM(is_bad)::numeric / COUNT(*), 2) AS bad_experience_pct
+FROM orders_14d;
+
+
+--- Alternate thinking in one cte
+--- move all conditions to join 
+WITH first14d_orders AS (
+    SELECT
+        o.order_id,
+        /* “Bad” if status tells us so OR delivered after the 30-min SLA */
+        (   o.status IN ('completed incorrectly', 'never received')
+         OR o.actual_delivery_timestamp
+              > o.order_timestamp + INTERVAL '30 minutes'
+        ) AS is_bad
+    FROM orders   o
+    JOIN customers c
+      ON c.customer_id = o.customer_id
+     /* ① June-2022 sign-ups only */
+     AND c.signup_timestamp >= DATE '2022-06-01'
+     AND c.signup_timestamp <  DATE '2022-07-01'
+     /* ② Order must fall in the customer’s first 14 days */
+     AND o.order_timestamp >= c.signup_timestamp
+     AND o.order_timestamp <  c.signup_timestamp + INTERVAL '14 days'
+)
+
+SELECT
+    ROUND(100 * AVG(is_bad::int), 2)  AS bad_experience_pct
+FROM first14d_orders;
+```
+
+#### [SQL Question 2: : Analyze DoorDash Delivery Performance](https://datalemur.com/blog/doordash-sql-interview-questions)(8 min)
+
+As a Data Analyst at DoorDash, you're tasked to analyze the delivery performance of the drivers. Specifically, you are asked to compute the average delivery duration of each driver for each day, the rank of each driver's daily average delivery duration, and the overall average delivery duration per driver.
+
+Use the deliveries table where each row represents a single delivery. The columns are:
+delivery_id: An identifier for the delivery
+driver_id: An identifier for the driver
+delivery_start_time: Timestamp for the start of the delivery
+delivery_end_time: Timestamp for the end of the delivery
+```sql 
+
+WITH daily AS (
+    SELECT
+        driver_id,
+        DATE_TRUNC('day', delivery_start_time) AS delivery_day, -- focus on naming
+        AVG(delivery_end_time - delivery_start_time) AS avg_delivery_dur
+    FROM deliveries
+    WHERE delivery_start_time IS NOT NULL -- checks I missed 
+      AND delivery_end_time   IS NOT NULL -- checks I missed
+    GROUP BY driver_id, DATE_TRUNC('day', delivery_start_time)
+)
+SELECT
+    driver_id,
+    delivery_day,
+    avg_delivery_dur,
+    RANK() OVER (PARTITION BY delivery_day 
+                 ORDER BY avg_delivery_dur ASC)  AS daily_rank, -- did desc pay attention - getting impatient 
+    AVG(avg_delivery_dur) OVER (PARTITION BY driver_id) AS overall_avg_delivery_dur -- was not too sure while writing this 
+FROM daily
+ORDER BY delivery_day, daily_rank; -- missed ordering
+
+
+--- Tips 
+--- Keep in mind the window functions will only work with columns it is involved with like in this `overall_avg_delivery_dur` will only see `avg_delivery_dur` and `driver_id` and for each row for that driver it will put same value.
+--- Rank(will skip next rank, leave gaps after ties, skip 1-2-2-4) and Dense Rank (will not skip 1-2-2-3)
+```
+
+#### [SQL Question 4: Restaurant Performance Analysis](12 min)
+
+Tip: Jot down a 1-sentence goal (e.g., “Find top 5 restaurants by order count in last 30 days”)
+
+```sql
+SELECT 
+    restaurant_id,
+    tot_orders
+FROM (
+    SELECT 
+        restaurant_id,
+        COUNT(order_id) AS tot_orders,
+        RANK() OVER (ORDER BY COUNT(order_id) DESC) AS order_rank -- used rank which is a reserved keyword
+    FROM orders AS o
+    WHERE 
+        o.order_date >= CURRENT_DATE - INTERVAL '1 month'
+        AND o.order_date < CURRENT_DATE -- missed AND 
+    GROUP BY restaurant_id
+) ranked_rest
+WHERE order_rank <= 5;
+
+
+```
+</details>

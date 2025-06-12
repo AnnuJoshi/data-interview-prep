@@ -58,10 +58,7 @@ ORDER BY col NULLS LAST -- explicit control
 | ISNULL(a, b)  (not in postgress only in MySQL)  | Same as above                        | ISNULL(bonus, 0)                   |
 | IFNULL(a, b)  (not in postgress only in MySQL)  | Same as above                        | IFNULL(bonus, 0)                  |
 | NULLIF(a, b)         | Return NULL if `a = b`; otherwise `a`| NULLIF(col1, col2)                |
-
-
-
-
+</details>
 
 
 ### Top Gotchas to Verbally Call Out
@@ -90,3 +87,65 @@ DATE_TRUNC('month', t.Order_Date_Time) = '2023-08-01'::date
 - Be mindful of timezone settings if Order_Date_Time includes timezone info (TIMESTAMPTZ), as DATE_TRUNC respects the timezone.
 - Sometimes prevent the use of an index on Order_Date_Time unless you have a functional index on DATE_TRUNC('month', Order_Date_Time)
 - Consider alternative range queries like Order_Date_Time >= '2023-08-01' AND Order_Date_Time < '2023-09-01', which are often more index-friendly.
+</details>
+
+<details> 
+<summary>2. DATE_PART </summary>
+</details> 
+
+<details> 
+<summary>3. EXTRACT </summary>
+ EXTRACT(MONTH FROM customers.signup_timestamp) = 6
+</details> 
+
+<details> 
+<summary>4. DATE </summary>
+ EXTRACT(MONTH FROM customers.signup_timestamp) = 6
+</details>
+
+<details> 
+<summary>5. Interval </summary>
+
+**Conceptually** An interval is a span of time, not a point in time.\
+Native INTERVAL type that internally keeps
+    • months,\
+    • days,\
+    • microseconds.\
+    • Literals:
+
+    interval '2 hours 30 minutes'
+    interval '3 days'
+    interval '1 year -4 months
+
+```sql
+-- duration between two events
+SELECT delivery_end - delivery_start AS trip_interval
+
+-- average trip length in minutes
+SELECT AVG(EXTRACT(epoch FROM (delivery_end - delivery_start)) / 60) AS avg_minutes
+FROM deliveries;
+
+-- add 90 minutes to all start times
+UPDATE events
+SET starts_at = starts_at + interval '90 minutes';
+
+-- Understanding default interval values in postgres 
+-- NO default defined ; decided based on input 
+SELECT INTERVAL '1';  -- Output: 1 day
+SELECT INTERVAL '1:30';  -- Output: 01:30:00 (1 hour 30 minutes)
+
+-- epoch - which returns total seconds as a numeric value)
+SELECT EXTRACT(epoch FROM INTERVAL '1 hour');  -- Output: 3600 (seconds)
+SELECT EXTRACT(hour FROM INTERVAL '1 day 2 hours');  -- Output: 2 (just the hour part)
+
+```
+
+Quick mnemonic:\
+• TIMESTAMP / DATETIME → “When?”\
+• INTERVAL → “How long?”
+</details>
+
+<details>
+<summary> 6. Explain what an index is and the various types of indexes?
+</summary>
+</details>
