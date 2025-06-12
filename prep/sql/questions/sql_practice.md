@@ -60,3 +60,19 @@ FROM (
 WHERE free = 1 AND cnt >= 2;
 
 ```
+
+<details>
+<summary>585. Investments in 2016 </summary>
+https://leetcode.com/problems/investments-in-2016/description/
+
+```sql
+-- got stuck in self join, should have though in this direction 
+
+SELECT ROUND(SUM(tiv_2016)::NUMERIC,2) AS tiv_2016 
+FROM Insurance 
+WHERE (tiv_2015)
+ IN (SELECT tiv_2015 FROM Insurance GROUP BY tiv_2015 HAVING COUNT(*) > 1) AND
+(lat, lon) IN (SELECT lat, lon FROM Insurance GROUP BY lat,lon HAVING count(*) = 1)
+
+```
+
