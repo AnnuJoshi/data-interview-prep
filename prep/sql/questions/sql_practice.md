@@ -34,3 +34,29 @@ These functions operate on a group of rows (like regular aggregates such as SUM 
 WITHIN GROUP (ORDER BY ...) specifies that internal ordering for the function. It’s not about grouping rows like GROUP BY in the main query—it’s about how the values within the aggregation are sequenced.\
 For PERCENTILE_CONT, this clause is mandatory because the function is defined as an ordered-set aggregate.
 </details>
+
+<details>
+<summary> Consecutive Available Seats </summary>
+
+```sql
+select seat_id from 
+(
+select seat_id ,
+lag(free, 1) over (order by seat_id) as prev_free,
+lead(free, 1) over (order by seat_id) as next_free, 
+free 
+from Cinema 
+) where free = 1 and( prev_free = 1 or  next_free =1 )
+
+--- Second way 
+SELECT seat_id
+FROM (
+    SELECT seat_id,
+           free,
+           SUM(free) OVER (ORDER BY seat_id
+                           ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING) AS cnt
+    FROM   Cinema
+) AS t
+WHERE free = 1 AND cnt >= 2;
+
+```
