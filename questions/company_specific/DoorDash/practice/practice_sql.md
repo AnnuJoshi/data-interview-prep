@@ -317,3 +317,49 @@ WHERE order_rank <= 5;
 </details>
 
 
+<details>
+<summary> DAY 3 Practice </summary>
+
+#### [SQL Question 5: Calculating Courier Average Distance and Total Revenue](7 min)
+```sql
+    -- read question correctly as it is asking for absolute difference
+    -- In PostgreSQL, ROUND() works with numeric types,
+    -- had to read question multiple times 
+    SELECT 
+    courier_id, 
+    ROUND(AVG(ABS(end_point - start_point))::numeric, 0) AS avg_distance,
+    SUM(quantity * 
+        CASE 
+            WHEN ABS(end_point - start_point) > delivery_fee  --here also absolute 
+            THEN ABS(end_point - start_point) 
+            ELSE delivery_fee 
+        END) AS total_revenue
+FROM 
+    deliveries
+WHERE 
+    date >= CURRENT_DATE - INTERVAL '1 month'
+    AND date < CURRENT_DATE -- missed this 
+GROUP BY 
+    courier_id;
+
+-- Note - case when can be written like below for better clarity 
+SUM( 
+    CASE 
+        WHEN ABS(start_point - end_point) > delivery_fee 
+        THEN ABS(start_point - end_point) * quantity
+        ELSE delivery_fee * quantity 
+    END) AS total_revenue
+```
+
+
+#### [SQL Question 6: Average Delivery Time per Restaurant](2.30 min)
+
+```sql 
+-- 
+SELECT restaurant_id, 
+       AVG(EXTRACT(EPOCH FROM (delivery_time - order_time))/60) AS   avg_delivery_time_minutes -- give in minutes 
+FROM orders
+GROUP BY restaurant_id;
+```
+</details>
+
