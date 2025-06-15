@@ -149,3 +149,16 @@ Quick mnemonic:\
 <summary> 6. Explain what an index is and the various types of indexes?
 </summary>
 </details>
+
+
+<details>
+<summary> 6.You can replicate LAG/LEAD window functions with a self-join
+</summary>
+</details>
+
+<details>
+<summary> 6.You can replicate LAG/LEAD window functions with a self-join
+</summary>
+</details>
+
+https://blog.dataengineer.io/p/how-to-pass-data-engineering-sql
