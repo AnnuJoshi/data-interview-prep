@@ -1,5 +1,5 @@
 <details>
-<summary>  Maximum Concurrent Deliveries (Sweep-Line Algorithm) </summary>
+<summary>Maximum Concurrent Deliveries (Sweep-Line Algorithm) </summary>
 
 ```python 
 /* A courier can carry at most one active delivery at a time.
