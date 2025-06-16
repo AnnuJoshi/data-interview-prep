@@ -350,3 +350,120 @@ def romanToInt(self, s):
         return total
 ```
 </details>
+
+<details>
+<summary> Determine the friend with the optimal location to host a party.(5 min)</summary>
+
+```python 
+'''
+Assuming friends is a dict of name and coordinates of friends 
+'''
+def pick_friends(friends):
+    if len(friends) == 0:
+        return None
+    if len(friends) == 1:
+        return list(friends.keys())[0]
+    
+    min_distance = float('inf')
+    min_host = None
+    for host in friends:
+        total_distance = 0
+        hx_dis, hy_dis, hz_dis = friends[host]
+        for friend in friends:
+            if friend != host: 
+                x_dis, y_dis, z_dis = friends[friend]
+                dist = (((hx_dis - x_dis) ** 2) + ((hy_dis - y_dis) ** 2) + ((hz_dis - z_dis) ** 2)) ** 0.5 ## POW function - euclidean distance 
+                total_distance += dist
+
+        if total_distance < min_distance:
+            min_distance = total_distance
+            min_host = host
+
+    return min_host
+```
+
+```python 
+def pick_host(friends):
+    """
+    The optimal host is the one whose location minimizes the total Euclidean distance
+    for all friends to travel to the party.
+    
+    Args:
+        friends (list): A list of dictionaries, each containing a friend's 'name' and
+                        3D coordinates 'x', 'y', 'z'.
+                        
+    Returns:
+        str: The name of the friend who should host the party.
+    """
+    if not friends:
+        return None
+    
+    if len(friends) == 1:
+        return friends[0]['name']
+    
+    min_total_distance = float('inf')
+    optimal_host = None
+    
+    # Iterate through each friend as a potential host
+    for host in friends:
+        total_distance = 0
+        host_x, host_y, host_z = host['x'], host['y'], host['z']
+        
+        # Calculate total distance from this host to all other friends
+        for friend in friends:
+            friend_x, friend_y, friend_z = friend['x'], friend['y'], friend['z']
+            # Euclidean distance in 3D space
+            distance = ((host_x - friend_x) ** 2 + 
+                       (host_y - friend_y) ** 2 + 
+                       (host_z - friend_z) ** 2) ** 0.5
+            total_distance += distance
+        
+        # Update the optimal host if this total distance is smaller
+        if total_distance < min_total_distance:
+            min_total_distance = total_distance
+            optimal_host = host['name']
+    
+    return optimal_host
+
+# Example usage:
+if __name__ == "__main__":
+    friends_list = [
+        {"name": "Alice", "x": 0, "y": 0, "z": 0},
+        {"name": "Bob", "x": 1, "y": 1, "z": 1},
+        {"name": "Charlie", "x": 2, "y": 2, "z": 2},
+        {"name": "David", "x": 0, "y": 1, "z": 0}
+    ]
+    
+    host = pick_host(friends_list)
+    print(f"The optimal host is: {host}")
+```
+</details>
+
+<details>
+<summary> Write a function ‘min_distance’ to find pairs of elements with the minimum absolute distance in an array of integers, returning them in ascending order.(10 min) </summary> 
+
+```python 
+def min_distance(arr):
+    if len(arr) < 2:
+        return []
+    if len(arr) == 2:
+        return [(0, 1)]
+    
+    ind_arr = [(i, v) for i, v in enumerate(arr)]
+    ind_arr.sort(key=lambda x: x[1])  # Sort by value, not index
+    
+    min_dist = float('inf')
+    result = []
+    for i in range(len(ind_arr) - 1):
+        current_dist = ind_arr[i+1][1] - ind_arr[i][1]
+        if current_dist < min_dist:
+            min_dist = current_dist
+            result = [(ind_arr[i][0], ind_arr[i+1][0])]
+        elif current_dist == min_dist:
+            result.append((ind_arr[i][0], ind_arr[i+1][0]))
+    
+    result.sort(key=lambda x: (x[0], x[1]))  # Sort by both indices
+    return result
+```
+nlogn time 
+</details>

@@ -355,7 +355,6 @@ SUM(
 #### [SQL Question 6: Average Delivery Time per Restaurant](2.30 min)
 
 ```sql 
--- 
 SELECT restaurant_id, 
        AVG(EXTRACT(EPOCH FROM (delivery_time - order_time))/60) AS   avg_delivery_time_minutes -- give in minutes 
 FROM orders
