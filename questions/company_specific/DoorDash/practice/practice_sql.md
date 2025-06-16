@@ -362,3 +362,62 @@ GROUP BY restaurant_id;
 ```
 </details>
 
+<details>
+<summary> DAY 3 Practice </summary>
+
+#### Write a SQL query that selects users who transitioned directly from “Data Analyst” to “Data Scientist”, with no other titles in between. Utilize subqueries or join conditions to capture the specific data pattern, and calculate the percentage based on the total number of users.
+
+```sql
+-- Could have used self join 
+-- Percentages: Count users who pass the first checks and divide by the total relevant users (either all Data Analysts or all users, depending on the intent).
+-- I’d ask if the percentage is out of all users or just Data Analysts.
+-- I’m calculating the percentage out of users who were Data Analysts, since the question is about their career progression. Does that sound right, or should it be all users?
+-- Remember the word “sequence” or “order” as your mental nudge to explore window functions like LAG, which is perfect for looking at “previous” or “next” records in a sorted list.
+-- Think, “What if end_time is missing? Does that mean the role is ongoing?” 
+
+WITH ordered_roles AS (
+    SELECT 
+        user_id,
+        title,
+        start_time,
+        end_time,
+        LAG(title) OVER (PARTITION BY user_id ORDER BY start_time, end_time) AS prev_title,
+        LAG(end_time) OVER (PARTITION BY user_id ORDER BY start_time, end_time) AS prev_end_time
+    FROM user_experiences
+)
+SELECT 
+    ROUND(
+        (COUNT(DISTINCT CASE 
+            WHEN title = 'Data Scientist' 
+            AND prev_title = 'Data Analyst' 
+            AND prev_end_time <= start_time
+            THEN user_id 
+        END)::FLOAT / 
+        COUNT(DISTINCT user_id)::FLOAT) * 100,
+        2
+    ) AS transition_percentage
+FROM ordered_roles;
+```
+
+#### Let’s say we have a table representing vacation bookings. Write a query that returns columns representing the total number of bookings in the last 90 days, last 365 days, and overall.
+
+```sql
+-- 90 days is in quotes 
+-- case when then 1 and 0 not order id (needs integer for sum)
+-- operator between date and comparison 
+
+SELECT 
+    SUM(CASE WHEN booking_date >= CURRENT_DATE - INTERVAL '90 days' THEN 1 ELSE 0 END) AS last_90_days,
+    SUM(CASE WHEN booking_date >= CURRENT_DATE - INTERVAL '365 days' THEN 1 ELSE 0 END) AS last_365_days,
+    COUNT(*) AS all_time
+FROM bookings;
+
+-- in my sql and when start date is given then you have to check between 
+SELECT
+    COUNT(DISTINCT CASE WHEN check_out_date >= DATE_SUB('2022-01-01', INTERVAL 90 DAY) AND check_in_date <= '2022-01-01' THEN reservation_id END) AS num_bookings_last90d,
+    COUNT(DISTINCT CASE WHEN check_out_date >= DATE_SUB('2022-01-01', INTERVAL 365 DAY) AND check_in_date <= '2022-01-01' THEN reservation_id END) AS num_bookings_last365d,
+    COUNT(DISTINCT reservation_id) AS num_bookings_total
+FROM
+    bookings;
+
+```
