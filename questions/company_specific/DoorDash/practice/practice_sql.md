@@ -444,19 +444,7 @@ refunded_amount:double precision\
 restaurant_id:bigint\
 tip_amount:double precision\
 
-
-#### [Extremely Late Delivery](https://platform.stratascratch.com/coding/2113-extremely-late-delivery?code_type=1)
-```sql
-SELECT 
-    TO_CHAR(actual_delivery_time, 'YYYY-MM') AS month, -- REM To char for this format
-    -- interval 20 minutes, days 
-    (SUM(CASE WHEN actual_delivery_time > predicted_delivery_time + INTERVAL '20 minutes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS perc_late_orders
-FROM delivery_orders
-GROUP BY TO_CHAR(actual_delivery_time, 'YYYY-MM')
-ORDER BY month; -- order by month in these questions 
-```
-
-#### 
+#### 1. Workers With The Highest Salaries
 ```sql
 WITH highest_sal AS (
     select worker_id from (
@@ -484,7 +472,7 @@ JOIN max_salary ms ON a.salary = ms.highest_salary
 ORDER BY best_paid_title;
 ```
 
-#### (3min)
+#### 2. Bikes Last Used (3min)
 ```sql 
 SELECT bike_number,
        max(end_time) last_used
@@ -493,7 +481,7 @@ GROUP BY bike_number
 ORDER BY last_used DESC -- order by is done after group by and aggregation do last_used can be used 
 ```
 
-#### Avg Earnings per Weekday and Hour (6 min)
+#### 3. Avg Earnings per Weekday and Hour (6 min)
 ```sql 
 -- if any of order_total, tip_amount, refunded_amount, or discount_amount can be NULL, you might want to wrap them -  `COALESCE(order_total, 0)`
 
@@ -510,9 +498,7 @@ GROUP BY
 ORDER BY 
     day_of_week, hour;
 ```
-
-#### Avg Order Cost During Rush Hours (7 min)
-
+#### 4.Avg Order Cost During Rush Hours (7 min)
 ```sql 
 SELECT
     EXTRACT(HOUR FROM customer_placed_order_datetime) AS hour,
@@ -522,8 +508,7 @@ WHERE EXTRACT(HOUR FROM customer_placed_order_datetime) BETWEEN 15 AND 17 -- fil
 AND delivery_region = 'San Jose' -- missed this condition 
 GROUP BY EXTRACT(HOUR FROM customer_placed_order_datetime)
 ```
-
-#### Avg Order Cost During Rush Hours (7 min)
+#### 5. Lowest Revenue Generated Restaurants 
 Write a query that returns a list of the bottom 2% revenue generating restaurants. Return a list of restaurant IDs and their total revenue from when customers placed orders in May 2020.
 
 You can calculate the total revenue by summing the order_total column. And you should calculate the bottom 2% by partitioning the total revenue into evenly distributed buckets.
@@ -559,7 +544,197 @@ WHERE DATE(customer_placed_order_datetime AT TIME ZONE 'UTC') >= '2020-05-01'
 
 ```
 
-#### Top 2 Restaurants of 2022(5 min)
+
+#### 6. Delivering and Placing Orders correlation(3min)
+
+You have been asked to investigate whether there is a correlation between the average total order value and the average time in minutes between placing an order and having it delivered per restaurant.
+
+
+You have also been told that the column order_total represents the gross order total for each order. Therefore, you'll need to calculate the net order total.
+
+
+The gross order total is the total of the order before adding the tip and deducting the discount and refund. Make sure correlation is rounded to 2 decimals
+```sql
+-- one shot correct code 
+-- round numeric was correctly identified 
+-- extract epoch from correct 
+WITH RestaurantAverages AS (
+    SELECT 
+        restaurant_id,
+        ROUND(AVG(EXTRACT(EPOCH FROM (delivered_to_consumer_datetime - customer_placed_order_datetime))/60)::numeric, 2) AS avg_del_time_min,
+        ROUND(AVG(order_total + tip_amount - refunded_amount - discount_amount)::numeric, 2) AS avg_net_total
+    FROM delivery_details
+    GROUP BY restaurant_id
+)
+select * from  RestaurantAverages;
+```
+
+#### 7. Daily Top Merchants(20 min)
+
+```sql
+--GROUP BY reduces the number of rows by aggregating, while PARTITION BY works on the full set of rows (or the aggregated set if used after a GROUP BY) to compute values like rankings or running totals within each partition.
+-- PARTITION BY is like telling the database, "for each group defined by this column, calculate something, but don’t combine the rows into one."
+-- If you thought PARTITION BY merchant_id alongside a GROUP BY on date would work, it’s likely because you were picturing PARTITION BY as a way to focus on individual merchants within a broader grouping. But remember, PARTITION BY defines the scope of comparison for the window function.
+-- window functions (including those with PARTITION BY) are typically evaluated after WHERE, GROUP BY, and HAVING but before ORDER BY and LIMIT.
+-- GROUP BY sets up the summarized data, and PARTITION BY lets you do further analysis (like ranking) on that summarized data without losing the individual rows
+
+-- GROUP BY happens early and squashes data into summary rows (e.g., one row per date-merchant with a count of orders).
+-- PARTITION BY happens later in a window function and just draws invisible lines around groups of those rows to do calculations like ranking, without changing the row count.
+-- Ask yourself: “Am I summarizing data (GROUP BY) or analyzing within subsets of it (PARTITION BY)?”
+
+-- was trying to do in one CTE and got incorrect results
+WITH daily_orders AS (
+    SELECT 
+        TO_CHAR(order_timestamp, 'YYYY-MM-DD') AS date,
+        md.name,
+        COUNT(*) AS order_count
+    FROM order_details od
+    INNER JOIN merchant_details md ON od.merchant_id = md.id
+    GROUP BY TO_CHAR(order_timestamp, 'YYYY-MM-DD'), md.name  -- Aggregates by date and merchant
+),
+ranked AS (
+    SELECT 
+        date,
+        name,
+        DENSE_RANK() OVER (PARTITION BY date ORDER BY order_count DESC) AS rnk  -- Ranks within each date
+    FROM daily_orders
+)
+SELECT date, name, rnk
+FROM ranked
+WHERE rnk <= 3
+ORDER BY date, rnk, name;
+
+```
+
+
+#### 8. First Time Orders
+- understood the first order of customer incorrectly 
+
+```sql
+WITH first_cust_order AS (
+    SELECT customer_id, merchant_id
+    FROM (
+        SELECT customer_id, 
+               merchant_id,
+               ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_timestamp) AS rnk
+        FROM order_details
+    ) ranked
+    WHERE rnk = 1
+)
+SELECT md.name,
+       COUNT(od.id) AS total_orders,
+       COUNT(DISTINCT fco.customer_id) AS first_time_orders
+FROM merchant_details md
+INNER JOIN order_details od
+    ON md.id = od.merchant_id
+LEFT JOIN first_cust_order fco
+    ON md.id = fco.merchant_id
+GROUP BY md.name;
+```
+
+#### 9.Highest Earning Merchants
+```sql
+WITH daily_totals AS (
+    SELECT 
+        merchant_id,
+        DATE(order_timestamp) AS order_date,
+        ROUND(SUM(total_amount_earned)::NUMERIC, 2) AS total_earned
+    FROM order_details
+    GROUP BY merchant_id, DATE(order_timestamp)
+),
+previous_day_earnings AS (
+    SELECT 
+        merchant_id,
+        order_date,
+        total_earned AS current_day_earned,
+        LAG(total_earned, 1) OVER (PARTITION BY merchant_id ORDER BY order_date) AS prev_day_earned,
+        LAG(order_date, 1) OVER (PARTITION BY merchant_id ORDER BY order_date) AS prev_date
+    FROM daily_totals
+),
+filtered_consecutive_days AS (
+    SELECT 
+        merchant_id,
+        order_date,
+        prev_day_earned
+    FROM previous_day_earnings
+    WHERE prev_date IS NOT NULL 
+    AND DATEDIFF(order_date, prev_date) = 1 -- if interval is not working 
+),
+ranked_merchants AS (
+    SELECT 
+        merchant_id,
+        order_date,
+        RANK() OVER (PARTITION BY order_date ORDER BY prev_day_earned DESC) AS rnk
+    FROM filtered_consecutive_days
+)
+SELECT 
+    TO_CHAR(order_date, 'YYYY-MM-DD') AS date,
+    m.name
+FROM ranked_merchants r
+JOIN merchant_details m ON r.merchant_id = m.id
+WHERE rnk = 1
+ORDER BY order_date;
+```
+
+#### 10. [Extremely Late Delivery](https://platform.stratascratch.com/coding/2113-extremely-late-delivery?code_type=1)
+```sql
+SELECT 
+    TO_CHAR(actual_delivery_time, 'YYYY-MM') AS month, -- REM To char for this format
+    -- interval 20 minutes, days 
+    (SUM(CASE WHEN actual_delivery_time > predicted_delivery_time + INTERVAL '20 minutes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS perc_late_orders
+FROM delivery_orders
+GROUP BY TO_CHAR(actual_delivery_time, 'YYYY-MM')
+ORDER BY month; -- order by month in these questions 
+```
+
+
+
+#### 11.First Ever Ratings
+
+```sql
+with first_del as (
+    select driver_id,
+           row_number() over (partition by driver_id order by actual_delivery_time) as rnk,
+           delivery_rating
+    from delivery_orders
+    where actual_delivery_time is not null
+)
+select  
+    Round(Sum(Case when (delivery_rating = 0 and rnk=1) then 1 else 0 end) * 100.0 / count(distinct driver_id), 2) as percentage
+from first_del;
+```
+
+
+#### 12. More Than 100 Dollars
+
+```sql
+-- Extract vs DATE_TRUNC('month', order_placed_time)
+-- order_placed_time >= '2021-01-01 00:00:00' AND order_placed_time < '2022-01-01 00:00:00' (drastically reduce scan times)
+-- WHERE order_placed_time >= '2021-01-01' AND order_placed_time < '2022-01-01'
+-- '2021-01-01' is interpreted as the start of the day (midnight), just like '2021-01-01 00:00:00', in most databases like PostgreSQL.
+
+WITH sales AS (
+    SELECT 
+        restaurant_id,
+        EXTRACT(MONTH FROM order_placed_time) AS month, -- extract syntax 
+        SUM(sales_amount) AS sales_amount
+    FROM delivery_orders AS del
+    JOIN order_value AS ov -- left join if we consider all restaurants 
+        ON del.delivery_id = ov.delivery_id
+    WHERE EXTRACT(YEAR FROM order_placed_time) = 2021
+        AND actual_delivery_time IS NOT NULL 
+    GROUP BY EXTRACT(MONTH FROM order_placed_time), restaurant_id
+)
+SELECT 
+    month,
+    ROUND(SUM(CASE WHEN sales_amount >= 100 THEN 1 ELSE 0 END) * 100.0 / COUNT (restaurant_id), 2) AS per_rest_sales_gre_100 -- round
+FROM sales
+GROUP BY month
+ORDER BY month;
+```
+
+
+#### 13. Top 2 Restaurants of 2022(5 min)
 
 Christmas is quickly approaching, and your team anticipates an increase in sales. To predict the busiest restaurants, they wanted to identify the top two restaurants by ID in terms of sales in 2022.
 
@@ -599,7 +774,7 @@ FROM (
 WHERE rank_position <= 2;
 
 ```
-#### Average On-Time Order Value (4 min)
+#### 14. Average On-Time Order Value (4 min)
 ```sql
 SELECT driver_id,
        AVG(order_total) AS avg_order_value
@@ -615,39 +790,8 @@ WHERE (delivered_to_consumer_datetime - customer_placed_order_datetime) <= INTER
 GROUP BY driver_id;
 ```
 
-#### 
-```sql
--- Extract vs DATE_TRUNC('month', order_placed_time)
--- order_placed_time >= '2021-01-01 00:00:00' AND order_placed_time < '2022-01-01 00:00:00' (drastically reduce scan times)
--- WHERE order_placed_time >= '2021-01-01' AND order_placed_time < '2022-01-01'
--- '2021-01-01' is interpreted as the start of the day (midnight), just like '2021-01-01 00:00:00', in most databases like PostgreSQL.
-
-WITH sales AS (
-    SELECT 
-        restaurant_id,
-        EXTRACT(MONTH FROM order_placed_time) AS month, -- extract syntax 
-        SUM(sales_amount) AS sales_amount
-    FROM delivery_orders AS del
-    JOIN order_value AS ov -- left join if we consider all restaurants 
-        ON del.delivery_id = ov.delivery_id
-    WHERE EXTRACT(YEAR FROM order_placed_time) = 2021
-        AND actual_delivery_time IS NOT NULL 
-    GROUP BY EXTRACT(MONTH FROM order_placed_time), restaurant_id
-)
-SELECT 
-    month,
-    ROUND(SUM(CASE WHEN sales_amount >= 100 THEN 1 ELSE 0 END) * 100.0 / COUNT (restaurant_id), 2) AS per_rest_sales_gre_100 -- round
-FROM sales
-GROUP BY month
-ORDER BY month;
-```
-
-#### 
+#### 15. Workers Who Are Also Managers 
 ```sql
 
-```
-
-#### 
-```sql
 ```
 
