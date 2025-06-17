@@ -467,3 +467,117 @@ def min_distance(arr):
 ```
 nlogn time 
 </details>
+
+<details>
+<summary> Hacker Rank Practice 16 June 2025 </summary> 
+
+```python 
+''' NOTES:
+- round is case sensitive, its built in no need to import anything
+- / standard division operator; always returns a floating-point number
+- // floor division operator ; result to the nearest integer 
+- (-5) // 2 would give -3 since it rounds down toward negative infinity
+
+
+'''
+def plusMinus(arr):
+    pos_count, neg_count, zer_count = 0,0,0
+    n = len(arr)
+    for e in arr:
+        if e > 0:
+            pos_count+= 1
+        elif e == 0:
+            zer_count+= 1
+        else:
+            neg_count+= 1
+    print(round(pos_count/n ,6))
+    print(round(neg_count/n ,6))
+    print(round(zer_count/n ,6))
+    return 
+```
+
+```python 
+''' NOTES:
+- string is immutable so create a new string - do not try to modify it 
+
+- SLICING In python string 
+- list[start:stop:step] stop is exclusive 
+- s[-2:]   # Last two elements"
+- s[:-2]   # All except last two elements")
+- s[::2]    # Every second element")
+- s[::-1]   # Reverse the list"
+- s[::-2]  # Every second element from end")
+'''
+
+def timeConversion(s):
+    if s[-2:] == 'PM':
+         if int(s[:2]) < 12:
+            s = str(int(s[:2]) + 12) + s[2:]
+    else:
+        if s[:2] == '12': 
+            s = '00' + s[2:]
+    
+    return s[:8]
+```
+
+```python
+# Optimzed Fizzbuzz
+def fizzBuzz(n):
+    for i in range(1, n + 1):
+        output = ""
+        if i % 3 == 0:
+            output += "Fizz"
+        if i % 5 == 0:
+            output += "Buzz"
+        print(output or i) 
+```
+
+```python
+def lonelyinteger(a):
+    result = 0
+    for e in  a:
+        result = result ^ e # same element xored return 0 
+    return result
+
+'''
+Square array do you len(arr) in both loops
+Added return inside first for loop and debugged for 5 min - Don't do this 
+'''
+def diagonalDifference(arr):
+    dia_one  = 0
+    dia_two  = 0
+ 
+    for r in range(len(arr)):
+        for c in range(len(arr)):
+            if r==c :
+                dia_one += arr[r][c]
+            if c + r == len(arr)-1:
+                dia_two += arr[r][c]
+    return abs(dia_one -dia_two )
+
+
+def countingSort(arr):
+    freq_arr =[0]*100
+    for i in arr:
+        freq_arr[i] += 1
+    return freq_arr
+
+
+def findZigZagSequence(a, n):
+    a.sort()
+    mid = int((n + 1)/2)- 1 # REM 
+    a[mid], a[n-1] = a[n-1], a[mid]
+
+    st = mid + 1 
+    ed = n - 2 # REM
+    while(st <= ed):
+        a[st], a[ed] = a[ed], a[st]
+        st = st + 1
+        ed = ed - 1 # REM
+
+    for i in range (n):
+        if i == n-1:
+            print(a[i])
+        else:
+            print(a[i], end = ' ')
+    return

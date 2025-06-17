@@ -152,13 +152,52 @@ Quick mnemonic:\
 
 
 <details>
-<summary> 6.You can replicate LAG/LEAD window functions with a self-join
+<summary> 7.You can replicate LAG/LEAD window functions with a self-join
+https://blog.dataengineer.io/p/how-to-pass-data-engineering-sql
 </summary>
 </details>
 
 <details>
-<summary> 6.You can replicate LAG/LEAD window functions with a self-join
-</summary>
+<summary> 8. Ntile </summary>
+
+ - Purpose: It distributes rows into the specified number of buckets (100 in this case) as evenly as possible. If the number of restaurants isn’t perfectly divisible by 100, some buckets might have one more row than others, but it’ll still approximate the bottom 2% pretty well by taking buckets 1 and 2. For example, if you have 1000 restaurants, buckets 1 and 2 would cover roughly 20 restaurants (bottom 2%), which is what we want.
+
+
 </details>
 
-https://blog.dataengineer.io/p/how-to-pass-data-engineering-sql
+<details>
+<summary> 9. TO_CHAR </summary>
+
+- Purpose: Converts values (dates, timestamps, numbers) into formatted strings.
+- Syntax: `TO_CHAR(value, format_mask)` <br>
+  - `value`: Data to format (date, number, etc.).<br>
+  - `format_mask`: String defining output format using specific codes.
+
+### Use Cases
+
+#### Dates and Timestamps
+- Formats dates/timestamps for readable output.
+- **Example**: Turn `2023-05-15 14:30:00` into `15-May-2023`.
+  - Query: `SELECT TO_CHAR(created_at, 'DD-Mon-YYYY') AS formatted_date FROM your_table;`
+  - Format Codes: `DD` (day 01-31), `Mon` (abbreviated month), `YYYY` (4-digit year).
+- Other Codes: `HH24` (hours 00-23), `MI` (minutes), `AM` (a.m./p.m.).
+
+### Numbers
+- Formats numbers for currency, decimals, or padding.
+- **Example**: Turn `1234.567` into `$1,234.57`.
+  - Query: `SELECT TO_CHAR(price, 'FM$9,999.99') AS formatted_price FROM products;`
+  - Format Codes: `FM` (no extra spaces), `$` (literal), `9` (digit or space), `,` (thousands separator), `.` (decimal).
+
+## Key Points
+- **Output**: Always returns a text string (no math or comparisons on result).
+- **Errors**: Mismatched format mask and data type will cause errors.
+- **Tip**: Keep original value for calculations; use `TO_CHAR` for display only.
+
+## Quick Tip for Interview
+- Mention use for formatting dates or currency in reports.
+- Highlight flexibility with custom format masks.
+</details>
+
+<details>
+<summary> 10. </summary>
+</details>

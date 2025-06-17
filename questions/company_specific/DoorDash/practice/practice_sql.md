@@ -421,3 +421,161 @@ FROM
     bookings;
 
 ```
+</details>
+
+<details>
+<summary> DAY 4 Practice </summary>
+
+From https://platform.stratascratch.com/coding?companies=237&code_type=1
+
+Schema \
+consumer_id: bigint\
+customer_placed_order_datetime: timestamp without time zone\
+delivered_to_consumer_datetime: timestamp without time zone\
+delivery_region:text\
+discount_amount:bigint\
+driver_at_restaurant_datetime: timestamp without time zone\
+driver_id: bigint\
+is_asap: boolean\
+is_new:boolean\
+order_total:double precision\
+placed_order_with_restaurant_datetime:timestamp without time zone\
+refunded_amount:double precision\
+restaurant_id:bigint\
+tip_amount:double precision\
+
+
+#### [Extremely Late Delivery](https://platform.stratascratch.com/coding/2113-extremely-late-delivery?code_type=1)
+```sql
+SELECT 
+    TO_CHAR(actual_delivery_time, 'YYYY-MM') AS month, -- REM To char for this format
+    -- interval 20 minutes, days 
+    (SUM(CASE WHEN actual_delivery_time > predicted_delivery_time + INTERVAL '20 minutes' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS perc_late_orders
+FROM delivery_orders
+GROUP BY TO_CHAR(actual_delivery_time, 'YYYY-MM')
+ORDER BY month; -- order by month in these questions 
+```
+
+#### 
+```sql
+WITH highest_sal AS (
+    select worker_id from (
+        select
+        worker_id, -- missed ,
+        rank() over(ORDER BY salary desc) as rn
+        from 
+        worker) work 
+    where rn = 1 
+)
+select worker_title from 
+highest_sal inner join 
+title -- missed this table 
+on highest_sal.worker_id = title.worker_ref_id
+
+-----Alternate solution 
+WITH max_salary AS (
+    SELECT MAX(salary) AS highest_salary
+    FROM worker
+)
+SELECT b.worker_title AS best_paid_title
+FROM worker a
+JOIN title b ON a.worker_id = b.worker_ref_id
+JOIN max_salary ms ON a.salary = ms.highest_salary
+ORDER BY best_paid_title;
+```
+
+#### (3min)
+```sql 
+SELECT bike_number,
+       max(end_time) last_used
+FROM dc_bikeshare_q1_2012
+GROUP BY bike_number
+ORDER BY last_used DESC -- order by is done after group by and aggregation do last_used can be used 
+```
+
+#### Avg Earnings per Weekday and Hour (6 min)
+```sql 
+-- if any of order_total, tip_amount, refunded_amount, or discount_amount can be NULL, you might want to wrap them -  `COALESCE(order_total, 0)`
+
+-- Casting to Numeric: By adding ::numeric after the AVG(...) expression, we convert the double precision result of AVG to a numeric type, which ROUND can handle without issues.
+
+SELECT 
+    TO_CHAR(customer_placed_order_datetime, 'Day') AS day_of_week,
+    EXTRACT(HOUR FROM customer_placed_order_datetime) AS hour,
+    ROUND(AVG(order_total + tip_amount - refunded_amount - discount_amount)::NUMERIC, 2) AS avg_order
+FROM doordash_delivery
+GROUP BY 
+    TO_CHAR(customer_placed_order_datetime, 'Day'),
+    EXTRACT(HOUR FROM customer_placed_order_datetime)
+ORDER BY 
+    day_of_week, hour;
+```
+
+#### Avg Order Cost During Rush Hours (7 min)
+
+```sql 
+SELECT
+    EXTRACT(HOUR FROM customer_placed_order_datetime) AS hour,
+    AVG(order_total + tip_amount - discount_amount - refunded_amount) AS avg_net_order_value
+FROM delivery_details
+WHERE EXTRACT(HOUR FROM customer_placed_order_datetime) BETWEEN 15 AND 17 -- filter should go in where - you put it in having which is for aggregated filters
+AND delivery_region = 'San Jose' -- missed this condition 
+GROUP BY EXTRACT(HOUR FROM customer_placed_order_datetime)
+```
+
+#### Avg Order Cost During Rush Hours (7 min)
+Write a query that returns a list of the bottom 2% revenue generating restaurants. Return a list of restaurant IDs and their total revenue from when customers placed orders in May 2020.
+
+You can calculate the total revenue by summing the order_total column. And you should calculate the bottom 2% by partitioning the total revenue into evenly distributed buckets.
+```sql 
+--problem mentions partitioning into evenly distributed buckets, which suggests using something like NTILE
+WITH RestaurantRevenue AS (
+    SELECT 
+        restaurant_id,
+        SUM(order_total) AS total_revenue
+    FROM doordash_delivery
+    WHERE customer_placed_order_datetime >= '2020-05-01 00:00:00' 
+        AND customer_placed_order_datetime < '2020-06-01 00:00:00'
+    GROUP BY restaurant_id
+),
+--assigns each restaurant to one of 100 buckets using NTILE(100) based on their total_revenue in ascending order. This means the lowest revenue restaurants will be in the lowest buckets.
+RevenueBuckets AS (
+    SELECT 
+        restaurant_id,
+        total_revenue,
+        NTILE(100) OVER (ORDER BY total_revenue ASC) AS revenue_bucket
+    FROM RestaurantRevenue
+)
+SELECT 
+    restaurant_id,
+    total_revenue
+FROM RevenueBuckets
+WHERE revenue_bucket <= 2
+ORDER BY total_revenue ASC;
+
+-- extract date part and use 
+WHERE DATE(customer_placed_order_datetime AT TIME ZONE 'UTC') >= '2020-05-01' 
+    AND DATE(customer_placed_order_datetime AT TIME ZONE 'UTC') < '2020-06-01'
+
+```
+
+#### Top 2 Restaurants of 2022(5 min)
+
+Christmas is quickly approaching, and your team anticipates an increase in sales. To predict the busiest restaurants, they wanted to identify the top two restaurants by ID in terms of sales in 2022.
+
+The output should include the restaurant IDs and their corresponding sales.
+
+Note: Please remember that if an order has a blank value for actual_delivery_time, it has been canceled and therefore does not count towards monthly sales.
+```sql 
+SELECT 
+    do.restaurant_id,
+    SUM(ov.sales_amount) AS total_sales
+FROM delivery_orders do
+JOIN order_value ov ON do.delivery_id = ov.delivery_id
+WHERE 
+    DATE_PART('year', do.actual_delivery_time) = 2022 -- could have used this 
+    AND do.actual_delivery_time IS NOT NULL
+GROUP BY do.restaurant_id
+ORDER BY total_sales DESC, do.restaurant_id ASC
+LIMIT 2;
+```
