@@ -96,6 +96,13 @@ DATE_TRUNC('month', t.Order_Date_Time) = '2023-08-01'::date
 <details> 
 <summary>3. EXTRACT </summary>
  EXTRACT(MONTH FROM customers.signup_timestamp) = 6
+ 
+ - EXTRACT(EPOCH FROM timestamp), it converts the given timestamp into the number of seconds since the Unix epoch, which is defined as January 1, 1970, 00:00:00 UTC. So, it’s essentially giving you a single numeric value representing how many seconds have passed from that starting point up to the timestamp you provide.
+ - EXTRACT(EPOCH FROM (delivered_to_consumer_datetime - customer_placed_order_datetime)), you’re first subtracting two timestamps, which results in an interval (a duration of time). Then, EXTRACT(EPOCH FROM ...) converts that interval into the total number of seconds in that duration.
+ - Extract minute from Interval 
+ EXTRACT(MINUTE FROM (delivered_to_consumer_datetime - customer_placed_order_datetime))
+
+
 </details> 
 
 <details> 
@@ -117,7 +124,15 @@ Native INTERVAL type that internally keeps
     interval '3 days'
     interval '1 year -4 months
 
+    INTERVAL '45 minutes' is a literal interval value in PostgreSQL, which you can use for comparison.
+
+    To ease any doubts, let’s think about how PostgreSQL handles this internally. The database normalizes intervals for comparison, so whether the actual time difference comes out as '30 minutes' or '1800 seconds', it will accurately evaluate against '45 minutes'. For example, if a delivery took 40 minutes, the interval comparison will return true for <= INTERVAL '45 minutes'.
+    It’s very reliable and doesn’t require manual conversion to seconds or minutes.
+    
+    It’s flexible with the syntax and understands 'minute' or 'minutes', 'hour' or 'hours', etc. So, no issue there.
+
 ```sql
+
 -- duration between two events
 SELECT delivery_end - delivery_start AS trip_interval
 

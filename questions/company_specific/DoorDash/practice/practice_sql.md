@@ -578,4 +578,76 @@ WHERE
 GROUP BY do.restaurant_id
 ORDER BY total_sales DESC, do.restaurant_id ASC
 LIMIT 2;
+
+-- another approach
+SELECT 
+    restaurant_id,
+    total_sales,
+    rank_position
+FROM (
+    SELECT 
+       d.restaurant_id AS restaurant_id, 
+       SUM(o.sales_amount) AS total_sales,
+       RANK() OVER (ORDER BY SUM(o.sales_amount) DESC) AS rank_position
+    FROM delivery_orders d -- as do was not working 
+    JOIN order_value o ON d.delivery_id = o.delivery_id
+    WHERE 
+        DATE_PART('year', d.actual_delivery_time) = 2022
+        AND d.actual_delivery_time IS NOT NULL
+    GROUP BY d.restaurant_id
+) AS ranked_data
+WHERE rank_position <= 2;
+
 ```
+#### Average On-Time Order Value (4 min)
+```sql
+SELECT driver_id,
+       AVG(order_total) AS avg_order_value
+FROM delivery_details
+WHERE EXTRACT(EPOCH FROM (delivered_to_consumer_datetime - customer_placed_order_datetime))/60 <= 45 -- order of subtraction -- epoch from extract logic 
+GROUP BY driver_id;
+
+--- another approach 
+SELECT driver_id,
+       AVG(order_total) AS avg_order_value
+FROM delivery_details
+WHERE (delivered_to_consumer_datetime - customer_placed_order_datetime) <= INTERVAL '45 minutes' -- better, I came up with this but got confused 
+GROUP BY driver_id;
+```
+
+#### 
+```sql
+-- Extract vs DATE_TRUNC('month', order_placed_time)
+-- order_placed_time >= '2021-01-01 00:00:00' AND order_placed_time < '2022-01-01 00:00:00' (drastically reduce scan times)
+-- WHERE order_placed_time >= '2021-01-01' AND order_placed_time < '2022-01-01'
+-- '2021-01-01' is interpreted as the start of the day (midnight), just like '2021-01-01 00:00:00', in most databases like PostgreSQL.
+
+WITH sales AS (
+    SELECT 
+        restaurant_id,
+        EXTRACT(MONTH FROM order_placed_time) AS month, -- extract syntax 
+        SUM(sales_amount) AS sales_amount
+    FROM delivery_orders AS del
+    JOIN order_value AS ov -- left join if we consider all restaurants 
+        ON del.delivery_id = ov.delivery_id
+    WHERE EXTRACT(YEAR FROM order_placed_time) = 2021
+        AND actual_delivery_time IS NOT NULL 
+    GROUP BY EXTRACT(MONTH FROM order_placed_time), restaurant_id
+)
+SELECT 
+    month,
+    ROUND(SUM(CASE WHEN sales_amount >= 100 THEN 1 ELSE 0 END) * 100.0 / COUNT (restaurant_id), 2) AS per_rest_sales_gre_100 -- round
+FROM sales
+GROUP BY month
+ORDER BY month;
+```
+
+#### 
+```sql
+
+```
+
+#### 
+```sql
+```
+
