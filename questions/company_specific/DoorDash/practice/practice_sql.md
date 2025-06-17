@@ -312,7 +312,6 @@ FROM (
 ) ranked_rest
 WHERE order_rank <= 5;
 
-
 ```
 </details>
 
@@ -792,6 +791,30 @@ GROUP BY driver_id;
 
 #### 15. Workers Who Are Also Managers 
 ```sql
+select worker.first_name, 
+worker_title
+from worker
+inner join title
+on title.worker_ref_id = worker.worker_id
+and worker_title = 'Manager'
 
 ```
-
+#### Doordash total orders from 2022 - 2024 month on month and quarter as well
+```sql SELECT 
+    YEAR(order_date) AS year,
+    QUARTER(order_date) AS quarter,
+    MONTH(order_date) AS month,
+    DATE_FORMAT(order_date, '%Y-%m') AS month_year,
+    COUNT(*) AS total_orders
+FROM 
+    orders
+WHERE 
+    order_date BETWEEN '2022-01-01' AND '2024-12-31'
+GROUP BY 
+    YEAR(order_date),
+    QUARTER(order_date),
+    MONTH(order_date),
+    DATE_FORMAT(order_date, '%Y-%m')
+ORDER BY 
+    year, quarter, month;
+```
