@@ -1,5 +1,5 @@
 <details>
-<summary>Maximum Concurrent Deliveries (Sweep-Line Algorithm) </summary>
+<summary>1. Maximum Concurrent Deliveries (Sweep-Line Algorithm) </summary>
 
 ```python 
 /* A courier can carry at most one active delivery at a time.
@@ -28,7 +28,7 @@ Constraints & Tips
 */
 
 
-
+#incorrect solution I attempted thinking it is some modified merge interval thing 
 def sweep_line(n, arr_time):
     array_time = [(t.split()) for t in arr_time]
     array_time = [(datetime.fromisoformat(t[0])::time), datetime.fromisoformat(t[1])::time)) for t in array_time]
@@ -103,7 +103,7 @@ def calculate_max(deliveries):
 </details>
 
 <details>
-<summary> Move Zeros Back (5 min) </summary>
+<summary> 2. Move Zeros Back (5 min) </summary>
 
 ```python 
 def move_zeros_to_end(array):
@@ -144,7 +144,7 @@ def move_zeros_back(array):
 </details>
 
 <details>
-<summary>Recency Weighted Salaries(2 min) </summary>
+<summary>3. Recency Weighted Salaries(2 min) </summary>
 
 ```python 
 def recency_weighted_salaries(previous_salaries):
@@ -188,7 +188,7 @@ def min_distance(test_input):
 </details>
 
 <details>
-<summary> Scrambled Tickets (12 min)</summary>
+<summary>5. Scrambled Tickets (12 min)</summary>
 
 ```python 
 
@@ -208,7 +208,7 @@ def plan_trip(flights):
     count_dict = {}
     for src, dest in flights: # directly unpack flights 
         src_dest_map[src] = dest
-        count_dict[src] = count_dict.get(src, 0) + 1  #Please use .get() 
+        [src]count_dict = count_dict.get(src, 0) + 1    #Please use .get() 
         count_dict[dest] = count_dict.get(dest, 0) + 1
     
     # Find the starting city: it should appear only once in count_dict
@@ -240,7 +240,7 @@ def plan_trip(flights):
 
 
 <details>
-<summary> Generate a dictionary from two nested lists, handling duplicates or missing values. </summary>
+<summary>6. Generate a dictionary from two nested lists, handling duplicates or missing values. </summary>
 
 ```python 
 def create_dict_from_nested_lists(keys_list, values_list):
@@ -253,7 +253,7 @@ def create_dict_from_nested_lists(keys_list, values_list):
         value = values_list[i]
         # Handle nested structure by flattening if necessary
         if isinstance(key, list):   # REM
-            key = tuple(key)  # # REM Convert nested list to tuple to make it hashable
+            key = tuple(key)        ## REM Convert nested list to tuple to make it hashable
         if isinstance(value, list):
             value = tuple(value)
         result_dict[key] = value
@@ -270,7 +270,7 @@ def create_dict_from_nested_lists(keys_list, values_list):
 </details>
 
 <details>
-<summary> 2 Sum  (10 min)</summary>
+<summary>7. 2 Sum  (10 min)</summary>
 
 - Missed reading question properly had to return indexes, was returning numbers 
 - using abs for no reason it was not required 
@@ -288,7 +288,7 @@ def create_dict_from_nested_lists(keys_list, values_list):
 
 </details>
 <details>
-<summary> Write a function that takes n number of dice/die and returns all possible permutations of result.<br>
+<summary>8. Write a function that takes n number of dice/die and returns all possible permutations of result.<br>
 For example, when you have n=2 dice, we want to return: [(1,1), (1,2),(1,3)...(6,5),(6,6)] </summary>
 
 https://leetcode.com/discuss/post/1515046/doordash-data-eng-tech-phone-screen-by-a-wgmq/
@@ -314,7 +314,7 @@ def return_dice_permutation(n):
 </details>
 
 <details>
-<summary>13. Comvert from Roman to INT (15 min) </summary>
+<summary>13. Convert from Roman to INT (15 min) </summary>
 
 ```python 
 # REM to read question properly 
@@ -352,7 +352,7 @@ def romanToInt(self, s):
 </details>
 
 <details>
-<summary> Determine the friend with the optimal location to host a party.(5 min)</summary>
+<summary>10. Determine the friend with the optimal location to host a party.(5 min)</summary>
 
 ```python 
 '''
@@ -440,7 +440,7 @@ if __name__ == "__main__":
 </details>
 
 <details>
-<summary> Write a function ‘min_distance’ to find pairs of elements with the minimum absolute distance in an array of integers, returning them in ascending order.(10 min) </summary> 
+<summary>11. Write a function ‘min_distance’ to find pairs of elements with the minimum absolute distance in an array of integers, returning them in ascending order.(10 min) </summary> 
 
 ```python 
 def min_distance(arr):
@@ -469,7 +469,7 @@ nlogn time
 </details>
 
 <details>
-<summary> Hacker Rank Practice 16 June 2025 </summary> 
+<summary>12. Hacker Rank Practice 16 June 2025 </summary> 
 
 ```python 
 ''' NOTES:
