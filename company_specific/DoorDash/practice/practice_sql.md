@@ -739,6 +739,11 @@ ORDER BY month; -- order by month in these questions
 
 
 #### 11.First Ever Ratings
+The company you work for is looking at their delivery drivers' first-ever delivery with the company.
+
+You have been tasked with finding what percentage of drivers' first-ever completed orders have a rating of 0.
+
+Note: Please remember that if an order has a blank value for actual_delivery_time, it has been canceled and therefore does not count as a completed delivery.
 
 ```sql
 with first_del as (
@@ -755,6 +760,12 @@ from first_del;
 
 
 #### 12. More Than 100 Dollars
+
+For each month of 2021, calculate what percentage of restaurants have reached at least 100$ or more in monthly sales.
+
+Note: Please remember that if an order has a blank value for actual_delivery_time, it has been canceled and therefore does not count towards monthly sales.
+
+
 
 ```sql
 -- Extract vs DATE_TRUNC('month', order_placed_time)
@@ -791,6 +802,9 @@ The output should include the restaurant IDs and their corresponding sales.
 
 Note: Please remember that if an order has a blank value for actual_delivery_time, it has been canceled and therefore does not count towards monthly sales.
 ```sql 
+--REMEMBER 
+-- In your query with GROUP BY, PARTITION BY in the RANK() function operates on the aggregated data after grouping, not the original dataset. This means rankings are calculated within partitions of the summarized results, like total sales per restaurant.
+
 SELECT 
     do.restaurant_id,
     SUM(ov.sales_amount) AS total_sales
@@ -823,6 +837,7 @@ FROM (
 WHERE rank_position <= 2;
 
 ```
+
 #### 14. Average On-Time Order Value (4 min)
 ```sql
 SELECT driver_id,
@@ -850,27 +865,35 @@ and worker_title = 'Manager'
 
 ```
 #### Doordash total orders from 2022 - 2024 month on month and quarter as well
-```sql SELECT 
-    YEAR(order_date) AS year,
-    QUARTER(order_date) AS quarter,
-    MONTH(order_date) AS month,
-    DATE_FORMAT(order_date, '%Y-%m') AS month_year,
+```sql 
+SELECT 
+    EXTRACT(YEAR FROM order_placed_time) AS year,
+    EXTRACT(QUARTER FROM order_placed_time) AS quarter,
+    EXTRACT(MONTH FROM order_placed_time) AS month,
+    TO_CHAR(order_placed_time, 'YYYY-MM') AS month_year,
     COUNT(*) AS total_orders
 FROM 
-    orders
+    delivery_orders
 WHERE 
-    order_date BETWEEN '2022-01-01' AND '2024-12-31'
+    order_placed_time BETWEEN '2022-01-01' AND '2024-12-31'
 GROUP BY 
-    YEAR(order_date),
-    QUARTER(order_date),
-    MONTH(order_date),
-    DATE_FORMAT(order_date, '%Y-%m')
+    EXTRACT(YEAR FROM order_placed_time),
+    EXTRACT(QUARTER FROM order_placed_time),
+    EXTRACT(MONTH FROM order_placed_time),
+    TO_CHAR(order_placed_time, 'YYYY-MM')
 ORDER BY 
     year, quarter, month;
 ```
 
 #### Cumulative Sales of Restaurant 100011
 ```sql
+--By default, when no frame specification like ROWS BETWEEN is provided, PostgreSQL assumes ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW, meaning it sums from the start of the partition up to the current row.
+-- Effectively making it 
+-- SUM(SUM(sales_amount)) OVER (
+    --     ORDER BY order_date
+    --     ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+    -- ) AS cumulative_sales
+
 SELECT 
     order_date,
     restaurant_id,
