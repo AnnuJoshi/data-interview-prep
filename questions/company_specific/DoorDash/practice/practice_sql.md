@@ -818,3 +818,16 @@ GROUP BY
 ORDER BY 
     year, quarter, month;
 ```
+
+#### Cumulative Sales of Restaurant 100011
+```sql
+SELECT 
+    order_date,
+    restaurant_id,
+    SUM(sales_amount) AS daily_sales,
+    SUM(SUM(sales_amount)) OVER (PARTITION BY restaurant_id ORDER BY order_date) AS cumulative_sales
+FROM food_order
+WHERE restaurant_id = 100011
+GROUP BY order_date, restaurant_id
+ORDER BY order_date;
+```

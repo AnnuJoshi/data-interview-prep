@@ -20,6 +20,9 @@ GENERATE_SERIES(start, stop, step)
 ```sql 
 SELECT * FROM GENERATE_SERIES('2023-01-01'::date, '2023-01-05'::date, '1 day'::interval)
 --tweak the interval to hours, month
+
+select Cast(generate_series(timestamp '2012-08-01',
+			'2012-08-31','1 day') as date) as date
 ```
 
 PERCENTILE_CONT(fraction) WITHIN GROUP (ORDER BY column)
