@@ -502,11 +502,11 @@ def plusMinus(arr):
 
 - SLICING In python string 
 - list[start:stop:step] stop is exclusive 
-- s[-2:]   # Last two elements"
-- s[:-2]   # All except last two elements")
-- s[::2]    # Every second element")
-- s[::-1]   # Reverse the list"
-- s[::-2]  # Every second element from end")
+- s[-2:]    # Last two elements
+- s[:-2]    # All except last two elements
+- s[::2]    # Every second element
+- s[::-1]   # Reverse the list
+- s[::-2]   # Every second element from end
 '''
 
 def timeConversion(s):
