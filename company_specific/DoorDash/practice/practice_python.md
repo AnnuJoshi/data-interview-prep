@@ -471,13 +471,13 @@ nlogn time
 <details>
 <summary>12. Hacker Rank Practice 16 June 2025 </summary> 
 
+#### Given an array of integers, calculate the ratios of its elements that are positive, negative, and zero. Print the decimal value of each fraction on a new line with  places after the decimal.
 ```python 
 ''' NOTES:
 - round is case sensitive, its built in no need to import anything
 - / standard division operator; always returns a floating-point number
 - // floor division operator ; result to the nearest integer 
 - (-5) // 2 would give -3 since it rounds down toward negative infinity
-
 
 '''
 def plusMinus(arr):
@@ -496,6 +496,10 @@ def plusMinus(arr):
     return 
 ```
 
+#### Given a time in 12-hour AM/PM format, convert it to military (24-hour) time.
+
+Note: - 12:00:00AM on a 12-hour clock is 00:00:00 on a 24-hour clock.
+- 12:00:00PM on a 12-hour clock is 12:00:00 on a 24-hour clock.
 ```python 
 ''' NOTES:
 - string is immutable so create a new string - do not try to modify it 
@@ -519,9 +523,9 @@ def timeConversion(s):
     
     return s[:8]
 ```
+#### Optimzed Fizzbuzz
 
 ```python
-# Optimzed Fizzbuzz
 def fizzBuzz(n):
     for i in range(1, n + 1):
         output = ""
@@ -532,13 +536,17 @@ def fizzBuzz(n):
         print(output or i) 
 ```
 
+#### Given an array of integers, where all elements but one occur twice, find the unique element.
 ```python
 def lonelyinteger(a):
     result = 0
     for e in  a:
         result = result ^ e # same element xored return 0 
     return result
+```
 
+#### Given a square matrix, calculate the absolute difference between the sums of its diagonals.
+```python
 '''
 Square array do you len(arr) in both loops
 Added return inside first for loop and debugged for 5 min - Don't do this 
@@ -554,15 +562,19 @@ def diagonalDifference(arr):
             if c + r == len(arr)-1:
                 dia_two += arr[r][c]
     return abs(dia_one -dia_two )
+```
 
-
+#### Counting sort half logic - O(n) time 
+```python
 def countingSort(arr):
     freq_arr =[0]*100
     for i in arr:
         freq_arr[i] += 1
     return freq_arr
+```
+#### Given an array of  distinct integers, transform the array into a zig zag sequence by permuting the array elements. A sequence will be called a zig zag sequence if the first  elements in the sequence are in increasing order and the last  elements are in decreasing order, where k = (n+1)/2. You need to find the lexicographically smallest zig zag sequence of the given array.
 
-
+```python
 def findZigZagSequence(a, n):
     a.sort()
     mid = int((n + 1)/2)- 1 # REM 
@@ -581,3 +593,4 @@ def findZigZagSequence(a, n):
         else:
             print(a[i], end = ' ')
     return
+```
