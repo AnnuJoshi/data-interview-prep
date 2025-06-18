@@ -39,7 +39,7 @@ For PERCENTILE_CONT, this clause is mandatory because the function is defined as
 </details>
 
 <details>
-<summary> Consecutive Available Seats </summary>
+<summary> 2. Consecutive Available Seats </summary>
 
 ```sql
 select seat_id from 
