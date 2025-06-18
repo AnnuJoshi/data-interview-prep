@@ -29,6 +29,10 @@ Percent change = (this_year − last_year) / last_year.
 Order by percent_change ASC (biggest drop first).
 
 ```sql
+-- Select  '2022-09-01'::date -- will cast as date 
+-- Select  '2022-09-01' not sure
+-- Select  DATE '2022-09-01' -- will cast as date 
+
 WITH jan24 AS (
     SELECT restaurant_id, COUNT(*) AS last_year
     FROM orders
@@ -51,6 +55,26 @@ FROM jan25 j25
 JOIN jan24 j24 USING (restaurant_id)
 WHERE j25.this_year < j24.last_year
 ORDER BY percent_change ASC;
+
+
+--- optimized solution with just one scan of the table 
+
+SELECT 
+    restaurant_id,
+    COUNT(CASE WHEN placed_at >= DATE '2025-01-01' AND placed_at < DATE '2025-02-01' THEN 1 END) AS this_year,
+    COUNT(CASE WHEN placed_at >= DATE '2024-01-01' AND placed_at < DATE '2024-02-01' THEN 1 END) AS last_year,
+    ROUND(
+        (COUNT(CASE WHEN placed_at >= DATE '2025-01-01' AND placed_at < DATE '2025-02-01' THEN 1 END) - 
+         COUNT(CASE WHEN placed_at >= DATE '2024-01-01' AND placed_at < DATE '2024-02-01' THEN 1 END))::NUMERIC /
+         COUNT(CASE WHEN placed_at >= DATE '2024-01-01' AND placed_at < DATE '2024-02-01' THEN 1 END), 
+        4
+    ) AS percent_change
+FROM orders
+WHERE placed_at >= DATE '2024-01-01' AND placed_at < DATE '2025-02-01'
+GROUP BY restaurant_id
+HAVING COUNT(CASE WHEN placed_at >= DATE '2025-01-01' AND placed_at < DATE '2025-02-01' THEN 1 END) <
+       COUNT(CASE WHEN placed_at >= DATE '2024-01-01' AND placed_at < DATE '2024-02-01' THEN 1 END)
+ORDER BY percent_change ASC;
 ```
 
 #### A-2 30-Day Cancellation Rate per Restaurant (Easy/Medium)
@@ -61,6 +85,10 @@ Order by cancel_pct DESC, break ties by total_orders DESC.\
 Hint: status = 'CANCELLED' OR cancelled_at IS NOT NULL.\
 
 ```sql
+-- Alternate code 
+-- SUM(CASE WHEN status = 'CANCELLED' OR cancelled_at IS NOT NULL THEN 1 ELSE 0 END) AS cancelled_orders
+-- FILTER is Postgres specific, but same performance
+
 WITH last_30 AS (
     SELECT restaurant_id,
            COUNT(*) AS total_orders,
@@ -78,6 +106,18 @@ SELECT restaurant_id,
        ROUND(cancelled_orders::NUMERIC / total_orders, 2) AS cancel_pct
 FROM last_30
 ORDER BY cancel_pct DESC, total_orders DESC;
+
+-- can do in one query, if don't need cte for readability or reuse
+SELECT 
+    restaurant_id,
+    COUNT(*) AS total_orders,
+    COUNT(*) FILTER (WHERE status = 'CANCELLED' OR cancelled_at IS NOT NULL) AS cancelled_orders,
+    ROUND((COUNT(*) FILTER (WHERE status = 'CANCELLED' OR cancelled_at IS NOT NULL))::NUMERIC / COUNT(*), 2) AS cancel_pct
+FROM orders
+WHERE placed_at >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY restaurant_id
+HAVING COUNT(*) >= 30
+ORDER BY cancel_pct DESC, total_orders DESC;
 ```
 
 #### A-3 7-Day Rolling Avg Delivery Fee by City (Medium)
@@ -92,8 +132,10 @@ for every city and every 7-day window (inclusive) in the past 90 days.\
 
 ```sql 
 -- NOTE : You cannot use LAG have to use Range Between 
+-- DATE_TRUNC('day', placed_at) achieves the same result as CAST AS DATE by truncating the time to the start of the day
 
-WITH daily AS (          -- 1. compact orders into one row per (city, day)
+-- 1. compact orders into one row per (city, day)
+WITH daily AS (             
     SELECT
         CAST(o.placed_at AS DATE)          AS order_date,
         r.city,
@@ -106,7 +148,13 @@ WITH daily AS (          -- 1. compact orders into one row per (city, day)
       AND  (o.status <> 'cancelled' OR o.cancelled_at IS NULL)   -- ignore cancelled orders
     GROUP  BY 1, 2
 ),
-rolling AS (            -- 2. 7-day window that starts ON EACH order_date
+-- 2. 7-day window that starts ON EACH order_date
+
+    -- RANGE Between vs ROW Between
+        -- RANGE will include all rows where the order_date falls within the 6 days before the current row’s order_date, up to and including the current row’s date.
+        -- USE RANGE if you want the window to strictly cover a 7-day period based on date values, and ROWS if you’re okay with counting 7 rows regardless of the actual dates they represent.
+
+rolling AS (            
     SELECT
         order_date                            AS window_start,
         city,
@@ -114,7 +162,8 @@ rolling AS (            -- 2. 7-day window that starts ON EACH order_date
         SUM(day_orders)    OVER (
             PARTITION BY city
             ORDER BY order_date
-            RANGE BETWEEN CURRENT ROW AND INTERVAL '6 days' FOLLOWING
+            RANGE BETWEEN 6 PRECEDING AND CURRENT ROW
+            --RANGE BETWEEN CURRENT ROW AND INTERVAL '6 days' FOLLOWING
         ) AS window_orders,
         /* total delivery fees in that same span */
         SUM(day_fee_cents) OVER (
@@ -135,10 +184,9 @@ WHERE  window_start BETWEEN CURRENT_DATE - INTERVAL '90 days'
                         AND     CURRENT_DATE - INTERVAL '6 days'
   AND  window_orders >= 100          -- ≥ 100 orders in that 7-day window
 ORDER  BY window_start, city;
+
+--BETWEEN operator is indeed inclusive of both the start and end values
 ```
-
-
-
 
 #### A-4 Likely Churned Customers (Medium)
 
@@ -264,7 +312,9 @@ driver_id: An identifier for the driver
 delivery_start_time: Timestamp for the start of the delivery
 delivery_end_time: Timestamp for the end of the delivery
 ```sql 
-
+-- EXTRACT DATE FROM timestamp
+-- timestamp_column::date
+-- CAST(timestamp_column AS DATE)
 WITH daily AS (
     SELECT
         driver_id,
@@ -362,7 +412,7 @@ GROUP BY restaurant_id;
 </details>
 
 <details>
-<summary> DAY 3 Practice </summary>
+<summary> DAY 4 Practice </summary>
 
 #### Write a SQL query that selects users who transitioned directly from “Data Analyst” to “Data Scientist”, with no other titles in between. Utilize subqueries or join conditions to capture the specific data pattern, and calculate the percentage based on the total number of users.
 
@@ -423,7 +473,7 @@ FROM
 </details>
 
 <details>
-<summary> DAY 4 Practice </summary>
+<summary> DAY 5-6 Practice </summary>
 
 From https://platform.stratascratch.com/coding?companies=237&code_type=1
 
