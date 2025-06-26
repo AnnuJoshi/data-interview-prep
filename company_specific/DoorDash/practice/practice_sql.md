@@ -904,3 +904,39 @@ WHERE restaurant_id = 100011
 GROUP BY order_date, restaurant_id
 ORDER BY order_date;
 ```
+
+
+#### Remove Duplicate Emails
+```sql
+-- Your company has a users table that has accumulated many duplicate email addresses. Some of these duplicates are due to differences in case sensitivity, while others are due to unintentional whitespaces before or after the email. For instance, john@example.com and JOHN@EXAMPLE.COM are considered duplicates.
+
+-- Write a SQL query that returns records from the users table while excluding any duplicate email entries. Your solution should:
+
+-- Treat email addresses as duplicates if they match after accounting for case and whitespace
+-- Include only one record for each email, keeping the record with the smallest id.
+-- Return the cleaned table, ordered by id
+
+-- Step 1: Standardize emails and apply window function to order/group emails
+
+WITH cte AS (
+    SELECT
+        id,
+        email,
+        ROW_NUMBER() OVER (PARTITION BY email ORDER BY id) AS row_idx
+    FROM (
+        SELECT
+            id,
+            LOWER(REPLACE(email, ' ', '')) AS email
+        FROM users
+    ) t
+)
+
+-- Step 2: Select the lowest id for each unique email
+SELECT
+    id,
+    email
+FROM cte
+WHERE row_idx = 1
+ORDER BY id
+
+```

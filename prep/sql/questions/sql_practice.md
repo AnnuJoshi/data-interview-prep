@@ -63,6 +63,7 @@ FROM (
 WHERE free = 1 AND cnt >= 2;
 
 ```
+</details>
 
 <details>
 <summary>585. Investments in 2016 </summary>
@@ -78,4 +79,39 @@ WHERE (tiv_2015)
 (lat, lon) IN (SELECT lat, lon FROM Insurance GROUP BY lat,lon HAVING count(*) = 1)
 
 ```
+</details>
 
+<details>
+<summary> 4. Consecutive dates for each customer ID </summary>
+
+```sql
+-- Group consecutive dates for each customer ID, where consecutive means the dates are one day apart, and start a new group when the difference between dates is more than one day. We’ll output the customer ID, start date, and end date for each group of consecutive dates.
+
+WITH DateDiffs AS (
+    SELECT 
+        customer_id,
+        order_date,
+        LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date) AS prev_date,
+        CASE 
+            WHEN order_date = LAG(order_date) OVER (PARTITION BY customer_id ORDER BY order_date) + INTERVAL '1 day'
+            THEN 0
+            ELSE 1
+        END AS is_new_group
+    FROM customer_orders
+),
+GroupAssignment AS (
+    SELECT 
+        customer_id,
+        order_date,
+        SUM(is_new_group) OVER (PARTITION BY customer_id ORDER BY order_date) AS group_id --cummulative sum 
+    FROM DateDiffs
+)
+SELECT 
+    customer_id,
+    MIN(order_date) AS start_date,
+    MAX(order_date) AS end_date
+FROM GroupAssignment
+GROUP BY customer_id, group_id
+ORDER BY customer_id, start_date;
+```
+</details>
