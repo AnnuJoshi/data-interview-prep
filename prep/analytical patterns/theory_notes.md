@@ -1,6 +1,8 @@
 <details>
 <summary> Analytical Pattern </summary>
 
+
+
 1. Growth Accounting
     - How FB tracks inflow and outflow of active and inactive users (any state change tracking) 
 2. Survival Analysis 
@@ -59,6 +61,12 @@
         - Resurrected (active today, inactive yest)
         - Stale (inactive yes, inactive today)
         - deleted (don't exist today but were active/inactive yest) 
+    
+    - Growth rate = (new +resurr) - churned
+    - used for how users are interacting with notifications. Also used for tracking fake accounts, new fake account, reclassified as fake account, declassified
+    - ML model at Netflix was labelling applications as risky and not risky, then monitored the flow 
+    - At Airbnb, model for hosts classification - host cancels on you. labelling hosts as risky not risky, track the effectiveness of training hosts.
+    - So, this pattern is not limited to growth 
 
 2. Retention(J curves)
 
@@ -76,3 +84,6 @@ We are already have all the columns we need to we will skip this one, we are ass
 
 </details>
 </details>
+
+
+Jade Codes - https://www.youtube.com/watch?v=biaaA9GfNPw
