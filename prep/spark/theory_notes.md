@@ -92,7 +92,7 @@ Add Diagrams
     - `Shuffling happens automatically when needed, based on the operation.` You don’t explicitly trigger it, but you can influence it by setting configurations like `spark.sql.shuffle.partitions` (default is 200) to control how many partitions the shuffled data is split into, which can help manage workload distribution.
 
 
-![Example](../../resources/ezachly_community_bootcamp/images/shuffle_works.png)
+![Example](../../resources/ezachly_community_bootcamp/images/spark/shuffle_works.png)
 - Least Scalable part of Spark, as scale goes up 20-30 TB a day, shuffle is out of window, you need to solve differently
 - Let's say you have a Table with 4 files - we do a map operation first (add a new column, or .withcolumn()) - map is infinitely scalable - then imagine we do a group by user id - Let's say we have 3 partitions, (default is 200) so you divide user_id by 3 then whatever remainder you get is the partition number where it goes. 
 - So all data from File4 will be in partition 1,2 or 3.
@@ -180,7 +180,7 @@ When to bucket ?
 <details>
 <summary> Pyspark Lab </summary>
 
-pyspark wraps spark library in python so you can use python 
+Pyspark wraps spark library in python so you can use python 
 but built on Java so you don;t see camelcase not get_or_create but getOrCreate
 
 

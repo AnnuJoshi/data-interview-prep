@@ -48,8 +48,4 @@ Notes from [DataExpert.io Flink Lab](https://learn.dataexpert.io/lesson/flink-la
 - where should you run these aggregation, flink(5 min aggregation)?, spark(even to start it will take 5 min)? if you are grouping or deduping for over an hour then do batch(spark)
 - you do tumble aggregation for 30 min not for an hour, then you do aggregation in spark for an hour or 5 hour. 
 - At small scale, Flink can do daily aggregation, and have all the data and then write it down , it persists to disk after 5 min , that is why batch is better for longer windows cause flink will need lot of memeory to store it. 
-
-
-
-
 </details>
