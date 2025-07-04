@@ -1,6 +1,15 @@
 <details>
-<summary> Analytical Pattern </summary>
+<summary> Links </summary>
 
+1. [Medium Article](https://medium.com/@karkisatkarhere/from-patterns-to-practice-50978850fa5f)
+2. [Jade Codes](https://www.youtube.com/watch?v=biaaA9GfNPw)
+
+    
+</details>
+
+
+<details>
+<summary> Analytical Pattern bootcamp notes</summary>
 
 
 1. Growth Accounting
@@ -86,4 +95,15 @@ We are already have all the columns we need to we will skip this one, we are ass
 </details>
 
 
-Jade Codes - https://www.youtube.com/watch?v=biaaA9GfNPw
+
+<details>
+<summary> 7 patterns </summary>
+
+1. Aggregation 
+2. Experimentation
+3. Prediction
+4. Clustering
+5. Decision Tree
+6. Accumulation Derivative 
+7. Funnel analysis 
+</details>
