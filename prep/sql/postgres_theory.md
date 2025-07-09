@@ -286,7 +286,7 @@ The ORDER BY changes the window again.
 </details>
 
 <details>
-<summary> 13. ROLLUP and Cube </summary>
+<summary> 13. ROLLUP and CUBE </summary>
 
 ## aggregations in SQL 
 # Roll up ROLLUP produces a hierarchy of aggregations in the order passed into it

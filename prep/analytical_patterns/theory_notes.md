@@ -253,6 +253,48 @@ We are already have all the columns we need to we will skip this one, we are ass
 
 <details>
 <summary> 7. Funnel analysis </summary>
+- Focuses on tracking user behavior through a series of steps or stages, often with the goal of optimizing conversions, engagement, or revenue.
+
+1. GROUP BY operations: grouping sets, CUBE, and ROLLUP
+   - Grouping sets let you define specific combinations of dimensions to aggregate on, like grouping by OS type, device type, and browser type together, or just by OS type alone, all in one query. 
+   ```sql
+    from events 
+    group by grouping sets (
+        (os_type, device_type, browser_type),
+        (os_type, device_type),
+        (os_type),
+        (browser_type)
+    )
+   ```
+   - The magic of grouping sets is that it ignores certain dimensions in specific aggregations, and when a dimension is ignored in a particular grouping set, SQL sets the value of that column to NULL in the result set for that aggregation.
+     - if your original data already has NULL values in those columns, you run into ambiguity. You won't be able to tell whether a NULL in the result set means "this dimension was ignored in this aggregation" or "this dimension had a NULL value in the raw data."
+     - before applying grouping sets, you should use the COALESCE function on the grouping dimensions to replace any existing NULL values with a meaningful placeholder like 'unknown' or 'N/A'.
+   - This avoids the mess of multiple UNION ALL statements, which can be slow and hard to maintain. 
+   - CUBE, on the other hand, gives you all possible combinations of dimensions, which can explode into a ton of aggregations
+     ```sql
+        from events
+        group by cube(os_type, device_type, browser_type)
+     ```
+     - you will have 8 grains with 3 dimensions 
+     - never used this at any company 
+   - ROLLUP is more hierarchical, useful for data like country-state-city, where you always include the higher levels in the aggregation. It grows linearly, not factorially, making it more scalable.
+        ```sql
+        from events
+        group by cube(country, state, city)
+        ```
+      
+2. Window functions 
+    - 30-day rolling monthly average using something like `AVG() OVER (PARTITION BY dimension ORDER BY date ROWS BETWEEN 30 PRECEDING AND CURRENT ROW)`
+    - Function Over(PARTITION BY -> ORDER BY -> ROWS)
+    - cummulative sum from current row till starting
+
+3. Self Joins 
+
+4. CROSS JOIN UNNEST or LATERAL VIEW EXPLODE
+    - These are used to turn array columns back into rows, which is super useful for nested data structures. 
+    - based on SQL based engine(Postgres,Presto) -> CROSS JOIN UNNEST
+    - Java Based(Spark, Hadoop) -> LATERAL VIEW EXPLODE
+
 
 
 

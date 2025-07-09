@@ -1,6 +1,25 @@
 <details>
 <summary> Mock 1 </summary>
 
+## For interviews 
+1. Rewrite query without window function
+    - Lead and lag can replicated with self join 
+2. Write query that leverages recursive ctes, WITH Recursive 
+    - not used at work, managers and reports example is the only example 
+3. Using correlated subqueries 
+    - never needed to use at work
+
+1. Care about number of table scans 
+    - Count(case when) powerful for interviews and job 
+    - Cumulative table design
+2. Write clean code 
+    - use alias 
+    - use CTE 
+    - explain 
+    - Understand how SQL is converted to AST (abstract syntax tree)
+
+## Questions
+
 Schema 
 
 `restaurants`       (restaurant_id PK, name, city, signup_date)\
