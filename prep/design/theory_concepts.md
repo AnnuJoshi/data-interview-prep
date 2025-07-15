@@ -114,4 +114,12 @@ This stage ensures the processed data is readily available for end-user consumpt
 
 
 
-</details>
+</details> <!--Kappa-->
+
+<details>
+<summary> Links on Architecture </summary>
+
+1. [Kappa](https://medium.com/@sivakumar-mahalingam/kappa-architecture-a-comprehensive-guide-eb18050a6295) 1 min
+
+
+ </details> <!--Links on Architecture-->
