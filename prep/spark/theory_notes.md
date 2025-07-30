@@ -477,10 +477,11 @@ The worst situation is when bugs reach production and are flagged by data analys
 
 </details>
 
-
-
 <details>
-<summary> </summary>
+<summary> LAB 3</summary>
+
+- `python3 -m pytest`
+- For instance, instead of a plain tuple like (1, 'Alice', 25) where you might forget what each value means, you can define a namedtuple like `Person = namedtuple('Person', ['id', 'name', 'age'])` and then create an instance with person = Person(1, 'Alice', 25). Now, you can access the fields with person.name or person.age,
 </details>
 
 </details> <!--  top Testing closing -->

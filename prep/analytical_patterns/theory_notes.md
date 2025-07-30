@@ -253,8 +253,26 @@ We are already have all the columns we need to we will skip this one, we are ass
 
 <details>
 <summary> 7. Funnel analysis </summary>
-- Focuses on tracking user behavior through a series of steps or stages, often with the goal of optimizing conversions, engagement, or revenue.
 
+- Focuses on tracking user behavior through a series of steps or stages, often with the goal of optimizing conversions, engagement, or revenue.
+- Funnels are essential for understanding user drop-off points and optimizing the user journey.
+- The primary aim is to push users through these stages(from initial interaction to signing up or making a purchase) to achieve business goals such as increased revenue, growth, or engagement.
+
+## LAB 
+This involves tracking two key events: visiting the sign-up page (URL: /signup) and completing the sign-up process (URL: /api/v1/users). The goal is to calculate the percentage of users who complete the sign-up after visiting the page.
+
+#### Cardinality reduction 
+```sql
+case when referrer like '%zachwilson%' then 'onsite'
+     when  referrer like '%eczachly%' then 'onsite'
+     when  referrer like '%linkedin%' then 'Linkedin'
+     when  referrer like '%t.io%' then 'Twitter'
+     ELSE 'Other'
+     END as referred_mapped 
+From
+```
+
+#### SQL Stuff 
 1. GROUP BY operations: grouping sets, CUBE, and ROLLUP
    - Grouping sets let you define specific combinations of dimensions to aggregate on, like grouping by OS type, device type, and browser type together, or just by OS type alone, all in one query. 
    ```sql
@@ -294,6 +312,18 @@ We are already have all the columns we need to we will skip this one, we are ass
     - These are used to turn array columns back into rows, which is super useful for nested data structures. 
     - based on SQL based engine(Postgres,Presto) -> CROSS JOIN UNNEST
     - Java Based(Spark, Hadoop) -> LATERAL VIEW EXPLODE
+
+5. Data Modeling 
+    - The goal is to pre-aggregate data or materialize intermediate results to make life easier for analysts, especially as data scales. They emphasize that storage is cheaper than compute, so saving an analyst’s time by storing pre-computed tables is often worth it.
+    - Symptoms of bad data modelling 
+        1. Slow dashboards (consolidated all metrics across all products at FB , instagram)
+            - pre aggregate along domension that people care about 
+            - billions to 5 rows 
+        2. Queries with large number of CTEs
+            - introduce stages 
+            - store them - materialise them - storage is cheaper than compute
+        3. Lost of CASE WHEN statements in analyst queries 
+            - data model not conformed enough 
 
 
 
